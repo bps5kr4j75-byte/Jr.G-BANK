@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080b0a">
+<title>Jr.G BANK</title>
+<style>
+:root{color-scheme:dark;--bg:#080b0a;--panel:#111816;--line:#26332d;--green:#8cff38;--muted:#9aaba1;--white:#f3f7f3}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#14251a 0,transparent 34%),var(--bg);color:var(--white);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:900px;margin:auto;padding:24px 16px 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.brand{font-weight:900;letter-spacing:1.5px;font-size:21px}.brand span{color:var(--green)}.tag{font-size:11px;color:var(--green);border:1px solid #46652f;border-radius:99px;padding:5px 9px}
+h1{font-size:clamp(28px,6vw,42px);margin:6px 0}.muted{color:var(--muted)}.hero,.panel{background:linear-gradient(145deg,#142019,#0e1411);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px}.balance-label{color:var(--muted);font-size:13px}.balance{font-size:clamp(36px,9vw,54px);font-weight:800;letter-spacing:-2px;margin:7px 0}.balance small{font-size:17px;color:var(--muted);letter-spacing:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.account{background:#0b100d;border:1px solid var(--line);border-radius:14px;padding:16px}.account strong{display:block;font-size:17px;margin-bottom:10px}.account b{font-size:24px}.forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}label{display:block;color:var(--muted);font-size:13px;margin:12px 0 6px}input,select{width:100%;padding:13px;background:#080d0a;color:white;border:1px solid var(--line);border-radius:10px;font:inherit}button{margin-top:14px;padding:12px 16px;background:var(--green);color:#0b1208;border:0;border-radius:10px;font-weight:800;font-size:14px;width:100%;cursor:pointer}button:disabled{opacity:.5}.notice{border-left:3px solid var(--green);padding:10px 12px;background:#101910;color:#c8d6ca;font-size:12px;line-height:1.5;border-radius:5px;margin:16px 0}.section-title{font-size:18px;margin:0 0 14px}.tx{display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--line)}.tx:last-child{border:0}.tx strong{display:block;font-size:14px}.tx small{color:var(--muted)}.amount{white-space:nowrap;font-weight:700}.empty{color:var(--muted);padding:14px 0}.footer{text-align:center;color:#728078;font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<main>
+  <header class="top"><div class="brand">Jr.G <span>BANK</span></div><div class="tag">ENTORNO DEMO</div></header>
+  <section class="hero">
+    <div class="balance-label">Capital registrado en el prototipo</div>
+    <div class="balance" id="total">$0.00 <small>MXN</small></div>
+    <div class="muted" id="date">Cargando movimientos…</div>
+  </section>
+  <h2 class="section-title">Mis cuentas</h2>
+  <section class="grid" id="accounts"></section>
+  <div class="notice">⚠️ Esta es una simulación técnica. Los abonos son ficticios: no verifica billetes, no recibe efectivo, no guarda dinero y no permite pagos reales.</div>
+  <section class="forms">
+    <div class="panel">
+      <h2 class="section-title">Abono de prueba</h2>
+      <label for="depositAccount">Cuenta destino</label><select id="depositAccount"></select>
+      <label for="depositAmount">Monto en pesos</label><input id="depositAmount" type="number" min="0.01" step="0.01" placeholder="Ej. 500">
+      <button id="depositBtn">Registrar abono simulado</button>
+    </div>
+    <div class="panel">
+      <h2 class="section-title">Transferencia interna</h2>
+      <label for="from">Desde</label><select id="from"></select>
+      <label for="to">Hacia</label><select id="to"></select>
+      <label for="transferAmount">Monto en pesos</label><input id="transferAmount" type="number" min="0.01" step="0.01" placeholder="Ej. 100">
+      <button id="transferBtn">Transferir</button>
+    </div>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">Libro contable · últimos movimientos</h2>
+    <div id="journal"><div class="empty">Todavía no hay movimientos.</div></div>
+  </section>
+  <div class="footer">Jr.G BANK · Construido por etapas · Prototipo privado de aprendizaje</div>
+</main>
+<script>
+const money = n => new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN"}).format(n/100);
+const $ = id => document.getElementById(id);
+let state;
+async function request(url, body) {
+  const r = await fetch(url,{method:body?"POST":"GET",headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+  const data = await r.json();
+  if(!r.ok) throw new Error(data.error || "No se pudo completar");
+  return data;
+}
+function options(accounts) {
+  return accounts.map(a=>'<option value="'+a.id+'">'+a.name+'</option>').join("");
+}
+function render(s) {
+  state=s;
+  const total=s.accounts.reduce((n,a)=>n+a.balance,0);
+  $("total").innerHTML=money(total)+' <small>MXN</small>';
+  $("date").textContent="Actualizado: "+new Date().toLocaleString("es-MX");
+  $("accounts").innerHTML=s.accounts.map(a=>'<article class="account"><strong>'+a.name+'</strong><b>'+money(a.balance)+'</b></article>').join("");
+  ["depositAccount","from","to"].forEach(id=>$(id).innerHTML=options(s.accounts));
+  if(s.accounts.length>1) $("to").value=s.accounts[1].id;
+  $("journal").innerHTML=s.journal.length?s.journal.map(t=>'<div class="tx"><div><strong>'+t.description+'</strong><small>'+new Date(t.date).toLocaleString("es-MX")+'</small></div><div class="amount">'+money(t.metadata.amountCents||0)+'</div></div>').join(""):'<div class="empty">Todavía no hay movimientos.</div>';
+}
+async function refresh(){const s=await request("/api/state");render(s);}
+$("depositBtn").onclick=async()=>{try{$("depositBtn").disabled=true;await request("/api/demo-deposit",{accountId:$("depositAccount").value,amount:$("depositAmount").value});$("depositAmount").value="";await refresh();}catch(e){alert(e.message)}finally{$("depositBtn").disabled=false}};
+$("transferBtn").onclick=async()=>{try{$("transferBtn").disabled=true;await request("/api/transfer",{from:$("from").value,to:$("to").value,amount:$("transferAmount").value});$("transferAmount").value="";await refresh();}catch(e){alert(e.message)}finally{$("transferBtn").disabled=false}};
+refresh().catch(e=>alert("No se pudo cargar Jr.G BANK: "+e.message));
+</script>
+</body>
+</html>
