@@ -12,6 +12,14 @@ Prototipo educativo de un sistema financiero propio, desarrollado por etapas.
 - Libro de movimientos con asientos de doble partida.
 - Persistencia local en `data/ledger.json`.
 
+## Ejecutar pruebas automáticas
+
+```bash
+npm test
+```
+
+Las pruebas comprueban el estado inicial, abonos simulados, transferencias, rechazo por saldo insuficiente y equilibrio de los asientos contables. GitHub Actions ejecuta estas comprobaciones automáticamente al actualizar `main` o abrir un pull request.
+
 ## Ejecutar
 
 Requiere Node.js 20 o superior.
